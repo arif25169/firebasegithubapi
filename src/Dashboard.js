@@ -9,6 +9,7 @@ import { Dropdown } from "primereact/dropdown";
 import { Growl } from "primereact/growl";
 let gitdirUserPath;
 let gitfiledelPath;
+let gitdirUsersha;
 const token = "cfe6f89de53e39323b6c5618b5cafcd3745d18f5";
 class Dashboard extends Component {
   constructor() {
@@ -117,7 +118,6 @@ class Dashboard extends Component {
       this.setState({ urlApi: data });
     } else this.gitUrlApi2();
   };
-
   gitUrlApi2 = async () => {
     var finalUrl;
     // console.log('nai')
@@ -181,48 +181,67 @@ class Dashboard extends Component {
     console.log(data);
     this.setState({ urlApi: data });
   };
-  gitdelApi = async () => {
-    let inputUrl = this.state.finalUrl;
-    if (this.state.gitUserPath !== "") {
-      inputUrl =
-        "https://api.github.com/repos/" +
-        this.state.gitUserName +
-        "/" +
-        this.state.gitUserRepo +
-        "/contents/";
-    }
-    let nestedurl = inputUrl + gitfiledelPath;
-    console.log(nestedurl);
-    var filedata = {
+  gitdelApi = async (data) => {
+    console.log(data)
+    var filedata = JSON.stringify({
       message: "delete file by api",
-      committer: {
+      author: {
         name: "Arif Hasan",
         email: "arif@github.com"
       },
-      sha: "329688480d39049927147c162b9d2deaf885005f"
-    };
-    try {
-      let res = await axios.delete(nestedurl, filedata, {
-        headers: { Authorization: "Token " + token }
-      });
-      console.log(res);
-      if (res.status === 201) {
-        this.growl.show({
-          severity: "success",
-          summary: "Success Message",
-          detail: "Successfully Uploaded"
-        });
-      }
-    } catch (error) {
-      this.growl.show({
-        severity: "error",
-        summary: "Error Message",
-        detail: "Upload failed"
-      });
-      // console.log(error.response.data);
-      // console.log(error.response.status);
-      // console.log(error.response.headers);
-    }
+      sha: data.sha
+    });
+    console.log(filedata)
+   
+    var furl=data.html_url
+    console.log(furl)
+    const rawResponse = await fetch(furl, {
+      method: 'DELETE',
+      headers: {
+        Authorization: "Token " + token ,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'  
+      },
+      body: JSON.stringify({
+        message: "delete file by api",
+        author: {
+          name: "Arif Hasan",
+          email: "arif@github.com"
+        },
+        sha: data.sha
+      })
+    });
+    const content = await rawResponse.json();
+  
+    console.log(content);
+    // try {
+    //   let res = await axios.delete(furl, filedata,  {
+    //     headers: { 
+    //       Authorization: "Token " + token ,
+    //       "Access-Control-Allow-Origin": "*",
+    //       "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+    //     },
+    //   });
+    //   console.log(res);
+    //   if (res.status === 200) {
+    //     this.growl.show({
+    //       severity: "success",
+    //       summary: "Success Message",
+    //       detail: "Successfully Deleted"
+    //     });
+    //   }
+    // } catch (error) {
+    //   this.growl.show({
+    //     severity: "error",
+    //     summary: "Error Message",
+    //     detail: "Delete failed"
+    //   });
+    //   console.log(error.response.data);
+    //   console.log(error.response.status);
+    //   console.log(error.response.headers);
+    // }
     this.gitUrlApi2();
   };
 
@@ -275,14 +294,14 @@ class Dashboard extends Component {
     } else if (rowData.type !== "file") {
       gitdirUserPath = rowData.path + "/";
       return (
-        <Button icon="pi pi-plus" label="Dir" onClick={this.gitDirUrlApi} />
+        <Button icon="pi pi-plus" label="Dir"  onClick={() => this.gitDirUrlApi()} />
       );
     }
   };
   deleteBody = rowData => {
     if (rowData.type === "file") {
-      gitfiledelPath = rowData.path;
-      return <Button icon="pi pi-trash" onClick={this.gitdelApi} />;
+      return <Button icon="pi pi-trash" onClick={() => this.gitdelApi(rowData)} />;
+      
     } else if (rowData.type !== "file") {
       return "";
     }
@@ -371,22 +390,22 @@ class Dashboard extends Component {
         <Button
           icon="pi pi-arrow-left"
           title="Go Back"
-          onClick={this.goBackApi}
+          onClick={() => this.goBackApi()}
           style={{ float: "right" }}
         />
       </div>
     );
     let paginatorLeft2 = (
-      <Button icon="pi pi-refresh" onClick={this.gitUrlApi} />
+      <Button icon="pi pi-refresh"  onClick={() => this.gitUrlApi()} />
     );
     let paginatorRight = (
       <Button
         icon="pi pi-arrow-left"
         title="Go Back"
-        onClick={this.goBackApi}
+        onClick={() => this.goBackApi()}
       />
     );
-
+   
     return (
       <div>
         <Growl ref={el => (this.growl = el)}></Growl>
@@ -448,11 +467,12 @@ class Dashboard extends Component {
               placeholder="Select a Branch"
             />
             &nbsp;
-            <Button label="Fetch" onClick={this.gitUrlApi2} />
+           
+            <Button label="Fetch" onClick={() => this.gitUrlApi2()} />
             &nbsp;
-            <Button label="URL" onClick={this.gitUrlApi} />
+            <Button label="URL" onClick={() => this.gitUrlApi()} />
             &nbsp;
-            <Button label="Branch" onClick={this.gitUrlApi3} />
+            <Button label="Branch" onClick={() => this.gitUrlApi3()} />
           </div>
         </div>
         {this.state.urlApi ? (
@@ -526,7 +546,7 @@ class Dashboard extends Component {
             placeholder="Folder "
           />
           &nbsp;
-          <Button label="Upload" onClick={this.uploadGithub} />
+          <Button label="Upload"  onClick={() => this.uploadGithub()}/>
         </div>
 
         {/* https://github.com/google/rejoiner
